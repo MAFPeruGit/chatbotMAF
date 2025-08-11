@@ -1,334 +1,282 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chat Copilot - MAF</title>
+  <meta charset="utf-8" />
+  <title>Mafito QA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f5f6fa;
-    }
-     
-    #webchat-container {
-      display: none;
-      position: fixed;
-      bottom: 80px;
-      right: 100px;
-      width: 400px;
-      max-width: 90vw;
-      height: 540px;
-      max-height: 80vh;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      z-index: 9998;
-      background: white;
-      opacity: 0;
-      transform: scale(0.95);
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #webchat-container.show {
-      display: flex;
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    #header {
-        background-color: #EB0A1E; /* MAF red */
-        color: white;
-        padding: 10px;
+  :root {
+        --rojo: #E60012;
+        --gris: #4A4A4A;
+        }
+        body {
+        margin: 0;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: #eee;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto;
+        }
+        .card {
+        width: 380px;
+        max-width: 94vw;
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow: 0 12px 28px rgba(0,0,0,.14);
+        border: none; /* borde eliminado */
+        background: #fff;
+        }
+        .surface {
+        background: url('https://i.imgur.com/5tLaoyl.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        padding: 12px 12px 0 12px;
+        }
+        .hdr {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 6px 4px 8px;
+        }
+        .avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        object-fit: cover;
+        }
+        .titulo {
+        font-size: 20px;
+        font-weight: 900;
+        color: #222;
+        }
+        .estado {
+        margin-left: auto;
+        background: var(--rojo);
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 13px;
+        }
+        .webchat {
+        height: 420px;
+        border: 0;
+        border-radius: 16px;
+        overflow: hidden;
+        }
+        .inputbar {
         display: flex;
         align-items: center;
         gap: 10px;
-        flex-shrink: 0;
-        font-size: 4vw;
-        max-height: 60px;
-      }
-
-
-    #header img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-    }
-
-    #header span {
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    #chat-body {
-      position: relative;
-      flex: 1;
-      height: calc(100% - 56px);
-    }
-
-    #webchat {
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
-    }
-
-    #loading-spinner {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border: 3px solid #ccc;
-      border-top: 3px solid #333;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      animation: spin 1s linear infinite;
-      z-index: 10000;
-    }
-
-    #chat-toggle {
-      position: fixed;
-      bottom: 100px;
-      right: 24px;
-      width: 80px;
-      height: 80px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      z-index: 9999;
-      animation: floaty 2s ease-in-out infinite;
-    }
-
-    #chat-toggle img {
-      width: 100%;
-      height: auto;
-    }
-
-    #message-cloud {
-      position: fixed;
-      bottom: 180px;
-      right: 115px;
-      background: #fff;
-      color: #333;
-      border: 2px solid #e53935;
-      border-radius: 12px;
-      padding: 10px 14px;
-      max-width: 220px;
-      font-size: 14px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      display: none;
-      z-index: 9997;
-    }
-
-    /* Animaciones */
-    @keyframes floaty {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    /* Estilos responsive */
-    @media (max-width: 600px) {
-  /* Mafito más grande */
-  #chat-toggle {
-    bottom: 20px;
-    right: 20px;
-    width: 100px;
-    height: 100px;
-  }
-
-  #chat-toggle img {
-    width: 100%;
-    height: auto;
-  }
-
-  /* Reajustar el chat más arriba */
-  #webchat-container {
-    width: 95vw;
-    height: 85vh;
-    bottom: 130px; /* Más espacio porque Mafito es más grande */
-    right: 2.5vw;
-    border-radius: 16px;
-  }
-
-  /* Reajustar animación de "escribiendo" */
-  #mafito-typing {
-    bottom: 140px;
-    right: 45px;
-  }
-
-  /* Globito de mensaje */
-  #message-cloud {
-    bottom: 140px;
-    right: 120px;
-    font-size: 14px;
-    max-width: 75vw;
-  }
-}
-
-
-    @media (max-width: 480px) {
-      #webchat-container {
-        width: 95vw;
-        height: 85vh;
-        bottom: 10vh;
-        right: 2.5vw;
+        background: var(--gris);
+        padding: 12px;
+        border-top: 1px solid #3c3c3c;
+        }
+        .fakeinput {
+        flex: 1;
+        background: #fff;
+        color: #666;
+        padding: 16px 14px;
         border-radius: 16px;
-      }
-    }
-    #mafito-typing {
-      position: fixed;
-      bottom: 190px;
-      right: 36px;
-      font-size: 24px;
-      font-weight: bold;
-      color: #e53935;
-      z-index: 9999;
-      animation: bounceDots 1s infinite;
-      display: flex;
-      gap: 4px;
-    }
+        border: 1px solid #eee;
+        font-size: 16px;
+        }
+        .send {
+        background: var(--rojo);
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        }
+        @media (max-width: 480px) {
+        .card {
+            width: 96vw;
+        }
+        .avatar {
+            width: 54px;
+            height: 54px;
+        }
+        .titulo {
+            font-size: 22px;
+        }
+        .webchat {
+            height: 70vh;
+        }
+        }
+        /* Burbuja estilo simple */
+        .webchat__bubble,
+        .webchat__bubble--from-user {
+        background: #FFFFFF !important;
+        border: none !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
+        padding: 8px 12px !important;
+        }
 
-    #mafito-typing.hidden {
-      display: none;
-    }
+        .webchat__bubble__content{border: none !important;}
+        .webchat__bubble--from-user__content{border: none !important;}
 
-    @keyframes bounceDots {
-      0%, 80%, 100% {
-        transform: scale(1);
-      }
-      40% {
-        transform: scale(1.5);
-      }
-    }
-      
+        .webchat__imageAvatar,
+        .webchat__initialsAvatar,
+        .webchat__imageAvatar img {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+        background: #fff;
+        }
+        .webchat__stacked-layout__avatar-gutter {
+        margin-right: 12px !important;
+        display: flex;
+        align-items: flex-end;
+        }
+
+
+    /* Alineación estándar del avatar para mensajes del BOT */
+        .webchat__stacked-layout--from-bot .webchat__stacked-layout__avatar-gutter {
+          margin-right: 12px !important;
+          margin-left: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        /* Alineación estándar del avatar para mensajes del USUARIO */
+        .webchat__stacked-layout--from-user .webchat__stacked-layout__avatar-gutter {
+          margin-left: 12px !important;
+          margin-right: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: flex-end !important;
+        }
+
+        /* Avatar tamaño y forma para ambos lados */
+        .webchat__imageAvatar,
+        .webchat__initialsAvatar,
+        .webchat__imageAvatar img {
+          width: 38px !important;
+          height: 38px !important;
+          min-width: 38px !important;
+          min-height: 38px !important;
+          border-radius: 50% !important;
+          object-fit: cover !important;
+          background: #fff;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.09);
+        }
+
   </style>
 </head>
 <body>
-
-<!-- Botón de Mafito flotante -->
-<button id="chat-toggle">
-  <img src="https://i.imgur.com/X2LROTr.png" alt="Abrir chat" />
-</button>
-<div id="mafito-typing" class="mafito-typing hidden">
-  <span>.</span><span>.</span><span>.</span>
-</div>
-
-
-<!-- Globito de mensaje -->
-<div id="message-cloud">Te espero, no te preocupes.</div>
-
-<!-- Contenedor del chat -->
-<div id="webchat-container">
-  <div id="header">
-    <img src="https://i.imgur.com/mrhg8wz.png" alt="Mafito" />
-    <span>Mafito - En línea</span>
+  <div class="card">
+    <div class="surface">
+      <div class="hdr">
+        <div class="estado">En línea</div>
+      </div>
+      <div id="webchat" class="webchat"></div>
+    </div>
+    <div class="inputbar">
+      <input id="msg" class="fakeinput" placeholder="Escriba su mensaje" />
+      <button id="send" class="send">✈</button>
+    </div>
   </div>
-  <div id="chat-body">
-    <div id="loading-spinner" style="display: none;"></div>
-    <div id="webchat" role="main"></div>
-  </div>
-</div>
 
-<script>
-  const secret = '7HLsjzmCbdeBeKeUekuKjQ1kT4Mv9Xw8OZiWfIIB617ib3NhAElRJQQJ99BFACqBBLyAArohAAABAZBS2qJq.3WaHfh2gWeTvQtJJhD7veGTpoZZkh2ITR1lRqsX3vG0tKmFLYhbDJQQJ99BFACqBBLyAArohAAABAZBS2DIw';
-  const toggleButton = document.getElementById('chat-toggle');
-  const webchatContainer = document.getElementById('webchat-container');
-  const spinner = document.getElementById('loading-spinner');
-  const cloud = document.getElementById('message-cloud');
-  const mafitoTyping = document.getElementById('mafito-typing'); // NUEVO elemento animado
-  let chatLoaded = false;
-  let cloudTimeout = null;
+  <script>
+    // Usuario random
+    const USER_ID = 'user_' + Math.random().toString(36).slice(2);
 
-  toggleButton.addEventListener('click', async () => {
-    const showing = webchatContainer.classList.contains('show');
+    // Tu SECRET para QA
+    const secret = '7HLsjzmCbdeBeKeUekuKjQ1kT4Mv9Xw8OZiWfIIB617ib3NhAElRJQQJ99BFACqBBLyAArohAAABAZBS2qJq.3WaHfh2gWeTvQtJJhD7veGTpoZZkh2ITR1lRqsX3vG0tKmFLYhbDJQQJ99BFACqBBLyAArohAAABAZBS2DIw';
 
-    if (!showing && !chatLoaded) {
-      webchatContainer.classList.add('show');
-      spinner.style.display = 'block';
-      cloud.style.display = 'none';
-      clearTimeout(cloudTimeout);
-
-      const res = await fetch('https://directline.botframework.com/v3/directline/tokens/generate', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${secret}` }
-      });
-
-      const { token } = await res.json();
+    // 1. Generar token dinámico y renderizar el WebChat
+    fetch('https://directline.botframework.com/v3/directline/tokens/generate', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${secret}` }
+    })
+    .then(res => res.json())
+    .then(({ token }) => {
       const directLine = window.WebChat.createDirectLine({ token });
 
-      // 🧠 Middleware para mostrar animación de Mafito escribiendo
-      const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
-        if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY' && action.payload.activity.from.role === 'bot') {
-          if (mafitoTyping) mafitoTyping.classList.remove('hidden');
-
-          return new Promise(resolve => {
-            setTimeout(() => {
-              if (mafitoTyping) mafitoTyping.classList.add('hidden');
-              resolve(next(action));
-            }, 1000);
-          });
-        }
-        return next(action);
-      });
+      const styleOptions = {
+        accent: '#E60012',
+        bubbleBorderRadius: 16,
+        hideSendBox: true,
+        suggestedActionBorderRadius: 14,
+        avatarSize: 36,
+        backgroundColor: 'transparent'
+      };
 
       window.WebChat.renderWebChat({
         directLine,
-        store, // ← Usamos el store con middleware personalizado
+        userID: USER_ID,
+        locale: 'es-ES',
         styleOptions: {
-          botAvatarImage: 'https://i.imgur.com/mrhg8wz.png',
-          botAvatarInitials: '',
-          userAvatarInitials: 'Tú',
-          bubbleBackground: '#ffffff',
-          bubbleTextColor: '#333',
-          bubbleFromUserBackground: '#DCF8C6',
-          bubbleFromUserTextColor: '#111',
-          bubbleBorderRadius: 12,
-          bubbleFromUserBorderRadius: 12,
-          backgroundColor: '#f0f0f0',
-          primaryFont: 'Segoe UI, sans-serif',
-          sendBoxBackground: '#ffffff',
-          sendBoxTextColor: '#333',
-          sendBoxBorderTop: 'solid 1px #ccc',
-          timestampColor: '#999'
+            accent: '#E60012',
+            bubbleBorderRadius: 16,
+            hideSendBox: true,
+            suggestedActionBorderRadius: 14,
+            avatarSize: 38,
+            botAvatarImage: 'https://i.imgur.com/dj2hmjm.png',      // Avatar Mafito
+            botAvatarInitials: 'MF',
+            userAvatarImage: 'https://i.imgur.com/xQqfw19.png',     // Avatar Usuario
+            userAvatarInitials: 'Tú',
+            bubbleFromUserBackground: '#FFF',
+            bubbleFromUserTextColor: '#111',
+            bubbleFromUserBorderRadius: 16,
+            bubbleBackground: '#fff',
+            bubbleTextColor: '#222',
+            backgroundColor: 'transparent',
+            primaryFont: 'Segoe UI, sans-serif',
+            sendBoxBackground: '#ffffff',
+            sendBoxTextColor: '#333',
+            sendBoxBorderTop: 'solid 1px #ccc',
+            timestampColor: '#999',
+            suggestedActionBackgroundColor: '#4A4A4A',    // Usar nueva nomenclatura
+            suggestedActionTextColor: '#ffffff',
+            suggestedActionBorderColor: '#4A4A4A',
+            suggestedActionBorderRadius: 12,
+            suggestedActionBorderStyle: 'solid',
+            suggestedActionBorderWidth: 1,
+            suggestedActionPadding: 8,
         }
-      }, document.getElementById('webchat'));
+        }, document.getElementById('webchat'));
 
-      directLine.postActivity({
-        from: { id: 'user1', name: 'Usuario' },
-        type: 'event',
-        name: 'startConversation',
-        value: ''
-      }).subscribe();
 
-      spinner.style.display = 'none';
-      chatLoaded = true;
+      // Estado EN LÍNEA en el header
+      directLine.connectionStatus$.subscribe(s => {
+        const pill = document.querySelector('.estado');
+        if (pill) {
+          if (s === 2) { pill.textContent = 'En línea'; pill.style.opacity = '1'; }
+          else if (s === 1) { pill.textContent = 'Conectando…'; pill.style.opacity = '0.8'; }
+          else { pill.textContent = 'Sin conexión'; pill.style.opacity = '0.8'; }
+        }
+        // Al conectar, dispara saludo inicial
+        if (s === 2) {
+          directLine.postActivity({ type: 'event', name: 'webchat/join', from: { id: USER_ID } }).subscribe();
+          directLine.postActivity({ type: 'event', name: 'startConversation', from: { id: USER_ID } }).subscribe();
+        }
+      });
 
-    } else {
-      webchatContainer.classList.toggle('show');
-
-      if (!webchatContainer.classList.contains('show')) {
-        cloud.innerText = 'Te espero, no te preocupes.';
-        cloud.style.display = 'block';
-
-        cloudTimeout = setTimeout(() => {
-          cloud.innerText = 'Me despido, pero tranquilo, luego lo retomamos.';
-        }, 300000); // 5 minutos
-      } else {
-        cloud.style.display = 'none';
-        clearTimeout(cloudTimeout);
+      // --- Envío desde la barra de mensaje custom ---
+      const input = document.getElementById('msg');
+      const btn = document.getElementById('send');
+      function send() {
+        const text = (input.value || '').trim();
+        if (!text) return;
+        directLine.postActivity({
+          type: 'message',
+          from: { id: USER_ID },
+          text
+        }).subscribe();
+        input.value = '';
       }
-    }
-  });
-</script>
+      btn.addEventListener('click', send);
+      input.addEventListener('keydown', e => e.key === 'Enter' && send());
 
-
+    });
+  </script>
 </body>
 </html>
