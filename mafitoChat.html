@@ -2,35 +2,60 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Mafito QA</title>
+  <title>Chat Mafito</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
-  
   <style>
     :root {
       --rojo: #E60012;
       --gris: #4A4A4A;
     }
-  
+
     body {
       margin: 0;
-      display: grid;
-      place-items: center;
-      min-height: 100vh;
-      background: #eee;
       font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f2f2f2;
     }
-  
-    .card {
+
+    .chat-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 150px;
+      height: 200px;
+      background: transparent;
+      cursor: pointer;
+      z-index: 9999;
+      animation: floaty 2s ease-in-out infinite;
+    }
+
+    @keyframes floaty {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+        }
+
+        .chat-toggle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            
+            }
+
+    #chat-widget {
+      position: fixed;
+      bottom: 130px;
+      right: 180px;
       width: 380px;
       max-width: 94vw;
       border-radius: 28px;
       overflow: hidden;
       box-shadow: 0 12px 28px rgba(0, 0, 0, .14);
-      border: none;
       background: #fff;
+      display: none;
+      flex-direction: column;
+      z-index: 9998;
     }
-  
+
     .surface {
       background: url('https://i.imgur.com/5tLaoyl.png');
       background-size: cover;
@@ -38,47 +63,31 @@
       background-position: center;
       padding: 12px 12px 0 12px;
     }
-  
-    
-  
-    .avatar {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-  
-    .titulo {
-      font-size: 20px;
-      font-weight: 900;
-      color: #222;
-    }
-  
-    .hdr{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;   /* 🔒 siempre a la derecha */
-      gap:12px;
-      margin:6px 4px 8px;
+
+    .hdr {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin: 6px 4px 8px;
     }
 
-    .estado{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      background:var(--rojo);
-      color:#fff;
-      padding:6px 12px;
-      border-radius:999px;
-      font-weight:700;
-      font-size:13px;
-      /* elimina margin-left:auto; ya no es necesario */
+    .estado {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--rojo);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
     }
 
-    .estado-icon{
-      width:16px;
-      height:16px;
-      object-fit:contain;
+    .estado-icon {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
     }
 
     .webchat {
@@ -87,7 +96,7 @@
       border-radius: 16px;
       overflow: hidden;
     }
-  
+
     .inputbar {
       display: flex;
       align-items: center;
@@ -96,23 +105,18 @@
       padding: 12px;
       border-top: 1px solid #3c3c3c;
     }
-  
+
     .fakeinput {
       flex: 1;
       background: #fff;
       color: #333;
-      padding: 16px 14px;
+      padding: 14px;
       border-radius: 16px;
       border: 1px solid #ddd;
-      font-size: 16px;
+      font-size: 14px;
       outline: none;
-      transition: border-color 0.2s ease;
     }
-  
-    .fakeinput:focus {
-      border-color: var(--rojo);
-    }
-  
+
     .send {
       background: var(--rojo);
       border-radius: 16px;
@@ -121,198 +125,84 @@
       align-items: center;
       justify-content: center;
       padding: 8px;
-      transition: background 0.2s ease;
       border: none;
     }
-  
-    .send:hover {
-      background: #cc0010;
-    }
-  
+
     .send-icon {
-      width: 38px;
-      height: 38px;
+      width: 30px;
+      height: 30px;
       object-fit: contain;
       filter: brightness(0) invert(1);
     }
-  
+
     @media (max-width: 480px) {
-      .card {
-        width: 96vw;
+      .chat-toggle {
+        width: 60px;
+        height: 90px;
       }
-  
-      .avatar {
-        width: 54px;
-        height: 54px;
+
+      #chat-widget {
+        width: 94vw;
+        right: 10px;
+        bottom: 120px;
       }
-  
-      .titulo {
-        font-size: 22px;
-      }
-  
+
       .webchat {
-        height: 70vh;
+        height: 65vh;
       }
     }
-  
-    /* BURBUJA DEL BOT */
-    .webchat__bubble {
-      position: relative !important;
-      background: #FFFFFF !important;
-      color: #222 !important;
-      border-radius: 16px !important;
-      padding: 5px !important;
-      margin-bottom: 8px;
-      max-width: 80%;
-      align-self: flex-start;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      animation: fadeInUp 0.25s ease;
-      width: fit-content !important;
-    }
-  
-    .webchat__bubble:not(.webchat__bubble--from-user):not(.webchat__bubble--hide-nub)::after {
-      content: "";
-      position: absolute;
-      left: -8px;
-      top: 15px;
-      width: 0;
-      height: 0;
-      border-top: 10px solid transparent;
-      border-right: 10px solid #ffffff;
-      border-bottom: 10px solid transparent;
-      
-    }
-  
-    /* BURBUJA DEL USUARIO - tipo WhatsApp */
-    .webchat__bubble--from-user {
-      position: relative !important;
-      color: #000 !important;
-      border-radius: 16px !important;
-      padding: 0px !important;
-      margin-bottom: 6px;
-      max-width: 80%;
-      width: fit-content !important;
-      align-self: flex-end;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-      font-size: 15px !important;
-      line-height: 1.4;
-      animation: fadeInUp 0.25s ease;
-    }
-  
-    .webchat__bubble--from-user:not(.webchat__bubble--hide-nub)::after {
-      content: "";
-      position: absolute;
-      right: -8px;
-      top: 12px;
-      width: 0;
-      height: 0;
-      border-top: 8px solid transparent;
-      border-bottom: 8px solid transparent;
-    }
-  
-    /* Evita espacio sobrante por la punta oculta del framework */
-    .webchat__bubble__nub-pad {
-      display: none !important;
-    }
-  
-    /* LIMPIEZA VISUAL */
-    .webchat__bubble__content,
-    .webchat__bubble--from-user__content {
-      border: none !important;
-    
-    }
 
-    .webchat__bubble--from-user__content
+    .toggle-icon
     {
-      background: #DCF8C6 !important;
+        width: 250px;
     }
-  
-    .webchat__bubble--from-user p {
-      margin: 0;
-      padding: 0;
-    }
-  
-    /* AVATARES */
-    .webchat__imageAvatar,
-    .webchat__initialsAvatar,
-    .webchat__imageAvatar img {
-      width: 38px !important;
-      height: 38px !important;
-      min-width: 38px !important;
-      min-height: 38px !important;
-      border-radius: 50% !important;
-      object-fit: cover !important;
-      background: #fff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.09);
-    }
-  
-    .webchat__stacked-layout__avatar-gutter {
-      margin-right: 12px !important;
-      display: flex;
-      align-items: flex-end;
-    }
-  
-    .webchat__stacked-layout--from-bot .webchat__stacked-layout__avatar-gutter {
-      margin-right: 12px !important;
-      margin-left: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-    }
-  
-    .webchat__stacked-layout--from-user .webchat__stacked-layout__avatar-gutter {
-      margin-left: 12px !important;
-      margin-right: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: flex-end !important;
-    }
-  
-    /* ANIMACIÓN ENTRADA */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-   
   </style>
-  
-  
 </head>
 <body>
-  <div class="card">
+
+  <!-- Botón Mafito (único) -->
+  <div id="chat-toggle" class="chat-toggle">
+    <img id="toggle-icon" src="https://i.imgur.com/ju94pRb.png" alt="Mafito" />
+  </div>
+
+  <!-- Chat Widget -->
+  <div class="card" id="chat-widget">
     <div class="surface">
       <div class="hdr">
         <div class="estado">
-          <img src="https://i.imgur.com/93c4FrW.png" alt="Online" class="estado-icon">
-          En línea
-        </div>        
+          <img src="https://i.imgur.com/93c4FrW.png" class="estado-icon" alt="Estado">
+          <span class="estado-text">En línea</span>
+        </div>
       </div>
       <div id="webchat" class="webchat"></div>
     </div>
     <div class="inputbar">
       <input id="msg" class="fakeinput" placeholder="Escriba su mensaje" />
-      <!-- Sustituir el contenido del botón -->
       <button id="send" class="send">
         <img src="https://i.imgur.com/7mJlMtg.png" alt="Enviar" class="send-icon">
       </button>
-
     </div>
   </div>
 
   <script>
-    // Usuario random
     const USER_ID = 'user_' + Math.random().toString(36).slice(2);
+    const secret = '58nGV5k2ZRJOMtrlzgEU9E3KkIH2i7aJvx4KRpATE0YagXjBdq28JQQJ99BFACL93NaAArohAAABAZBS1VWE.DGqRN8iqZlMU15ZfaDdxuCswxnL1GenGYvAwnmVQeZTarG5EiTE1JQQJ99BFACL93NaAArohAAABAZBSDTN1'; // reemplaza por tu token
 
-    // Tu SECRET para QA
-    const secret = '58nGV5k2ZRJOMtrlzgEU9E3KkIH2i7aJvx4KRpATE0YagXjBdq28JQQJ99BFACL93NaAArohAAABAZBS1VWE.DGqRN8iqZlMU15ZfaDdxuCswxnL1GenGYvAwnmVQeZTarG5EiTE1JQQJ99BFACL93NaAArohAAABAZBSDTN1';
+    let chatVisible = false;
+    let hasWelcomed = false;
 
-    // 1. Generar token dinámico y renderizar el WebChat
+    const toggleButton = document.getElementById('chat-toggle');
+    const toggleIcon = document.getElementById('toggle-icon');
+    const chatWidget = document.getElementById('chat-widget');
+
+    toggleButton.addEventListener('click', () => {
+      chatVisible = !chatVisible;
+      chatWidget.style.display = chatVisible ? 'block' : 'none';
+      toggleIcon.src = chatVisible
+        ? 'https://i.imgur.com/VtnI7iM.png'
+        : 'https://i.imgur.com/ju94pRb.png';
+    });
+
     fetch('https://directline.botframework.com/v3/directline/tokens/generate', {
       method: 'POST',
       headers: { Authorization: `Bearer ${secret}` }
@@ -321,113 +211,99 @@
     .then(({ token }) => {
       const directLine = window.WebChat.createDirectLine({ token });
 
-      const styleOptions = {
-        accent: '#E60012',
-        bubbleBorderRadius: 16,
-        hideSendBox: true,
-        suggestedActionBorderRadius: 14,
-        avatarSize: 36,
-        backgroundColor: 'transparent'
-      };
+      const store = window.WebChat.createStore({}, ({ dispatch }) => next => action => {
+        if (action.type === 'DIRECT_LINE/INCOMING_ACTIVITY' && action.payload.activity.from.role === 'bot') {
+          toggleIcon.src = 'https://i.imgur.com/ftbzogZ.png';
+          setTimeout(() => {
+            toggleIcon.src = chatVisible
+              ? 'https://i.imgur.com/VtnI7iM.png'
+              : 'https://i.imgur.com/ju94pRb.png';
+          }, 1200);
+        }
+        return next(action);
+      });
 
       window.WebChat.renderWebChat({
         directLine,
         userID: USER_ID,
         locale: 'es-ES',
+        store,
         styleOptions: {
-            accent: '#E60012',
-            bubbleBorderRadius: 16,
-            hideSendBox: true,
-            suggestedActionBorderRadius: 14,
-            avatarSize: 38,
-            botAvatarImage: 'https://i.imgur.com/dj2hmjm.png',      // Avatar Mafito
-            botAvatarInitials: 'MF',
-            userAvatarImage: 'https://i.imgur.com/xQqfw19.png',     // Avatar Usuario
-            userAvatarInitials: 'Tú',
-            bubbleFromUserBackground: '#DCF8C6',
-            bubbleFromUserTextColor: '#111',
-            bubbleFromUserBorderRadius: 16,
-            bubbleBackground: '#fff',
-            bubbleTextColor: '#222',
-            backgroundColor: 'transparent',
-            primaryFont: 'Segoe UI, sans-serif',
-            sendBoxBackground: '#ffffff',
-            sendBoxTextColor: '#333',
-            sendBoxBorderTop: 'solid 1px #ccc',
-            timestampColor: '#999',
-            suggestedActionBackgroundColor: '#4A4A4A',    // Usar nueva nomenclatura
-            suggestedActionTextColor: '#ffffff',
-            suggestedActionBorderColor: '#4A4A4A',
-            suggestedActionBorderRadius: 12,
-            suggestedActionBorderStyle: 'solid',
-            suggestedActionBorderWidth: 1,
-            suggestedActionPadding: 8,
+          accent: '#E60012',
+          bubbleBorderRadius: 16,
+          hideSendBox: true,
+          suggestedActionBorderRadius: 14,
+          avatarSize: 38,
+          botAvatarImage: 'https://i.imgur.com/dj2hmjm.png',
+          botAvatarInitials: 'MF',
+          userAvatarImage: 'https://i.imgur.com/xQqfw19.png',
+          userAvatarInitials: 'Tú',
+          bubbleFromUserBackground: '#DCF8C6',
+          bubbleFromUserTextColor: '#111',
+          bubbleFromUserBorderRadius: 16,
+          bubbleBackground: '#fff',
+          bubbleTextColor: '#222',
+          backgroundColor: 'transparent',
+          primaryFont: 'Segoe UI, sans-serif',
         }
-        }, document.getElementById('webchat'));
+      }, document.getElementById('webchat'));
 
+      directLine.connectionStatus$.subscribe(s => {
+        const pill = document.querySelector('.estado');
+        const pillText = pill?.querySelector('.estado-text');
+        const pillIcon = pill?.querySelector('.estado-icon');
 
-      // Estado EN LÍNEA en el header + saludo inicial + icono correcto
-          let hasWelcomed = false;
+        if (pill && pillText && pillIcon) {
+          if (s === 2) {
+            pillText.textContent = 'En línea';
+            pillIcon.src = 'https://i.imgur.com/93c4FrW.png';
+            pill.style.opacity = '1';
+          } else if (s === 1) {
+            pillText.textContent = 'Conectando…';
+            pillIcon.src = 'https://i.imgur.com/7Fynw9L.png';
+            pill.style.opacity = '0.8';
+          } else {
+            pillText.textContent = 'Sin conexión';
+            pillIcon.src = 'https://i.imgur.com/7Fynw9L.png';
+            pill.style.opacity = '0.8';
+          }
+        }
 
-          directLine.connectionStatus$.subscribe(s => {
-            const pill = document.querySelector('.estado');
-            const pillText = pill?.querySelector('.estado-text');
-            const pillIcon = pill?.querySelector('.estado-icon');
+        if (s === 2 && !hasWelcomed) {
+          hasWelcomed = true;
+          directLine.postActivity({
+            type: 'event',
+            name: 'webchat/join',
+            from: { id: USER_ID },
+            locale: 'es-ES'
+          }).subscribe();
 
-            // Actualiza texto e ícono si existen
-            if (pill && pillText && pillIcon) {
-              if (s === 2) {
-                pillText.textContent = 'En línea';
-                pillIcon.src = 'https://i.imgur.com/7Fynw9L.png'; // Ícono online
-                pill.style.opacity = '1';
-              } else if (s === 1) {
-                pillText.textContent = 'Conectando…';
-                pillIcon.src = 'https://i.imgur.com/7Fynw9L.png'; // Puedes poner otro ícono de "cargando"
-                pill.style.opacity = '0.8';
-              } else {
-                pillText.textContent = 'Sin conexión';
-                pillIcon.src = 'https://i.imgur.com/7Fynw9L.png'; // Ícono offline (otro si deseas)
-                pill.style.opacity = '0.8';
-              }
-            }
+          directLine.postActivity({
+            type: 'event',
+            name: 'startConversation',
+            from: { id: USER_ID },
+            locale: 'es-ES'
+          }).subscribe();
+        }
+      });
 
-            // Enviar saludo solo 1 vez cuando esté conectado
-            if (s === 2 && !hasWelcomed) {
-              hasWelcomed = true;
-
-              directLine.postActivity({
-                type: 'event',
-                name: 'webchat/join',
-                from: { id: USER_ID },
-                locale: 'es-ES'
-              }).subscribe();
-
-              directLine.postActivity({
-                type: 'event',
-                name: 'startConversation',
-                from: { id: USER_ID },
-                locale: 'es-ES'
-              }).subscribe();
-            }
-          });
-
-
-      // --- Envío desde la barra de mensaje custom ---
-      const input = document.getElementById('msg');
-      const btn = document.getElementById('send');
-      function send() {
+      document.getElementById('send').addEventListener('click', () => {
+        const input = document.getElementById('msg');
         const text = (input.value || '').trim();
         if (!text) return;
+
         directLine.postActivity({
           type: 'message',
           from: { id: USER_ID },
           text
         }).subscribe();
-        input.value = '';
-      }
-      btn.addEventListener('click', send);
-      input.addEventListener('keydown', e => e.key === 'Enter' && send());
 
+        input.value = '';
+      });
+
+      document.getElementById('msg').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('send').click();
+      });
     });
   </script>
 </body>
